@@ -26,7 +26,8 @@ namespace HelloProto
             //SimpleActor();
             //AnonymousActor();
             //HookedActor();
-            Supervisor();
+            //Supervisor();
+            RequestResponse();
             Console.ReadKey();
         }
 
@@ -145,5 +146,16 @@ namespace HelloProto
         }
 
         #endregion // Supervisor
+
+        #region RequestResponse
+
+        private static void RequestResponse()
+        {
+            Props props = Actor.FromProducer(() => new RequesterActor());
+            PID pid = Actor.Spawn(props); // create actor according to the properties definition
+            pid.Tell("Hi");
+        }
+
+        #endregion // RequestResponse
     }
 }
