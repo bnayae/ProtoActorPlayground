@@ -13,7 +13,7 @@ namespace HelloProto
             var msg = context.Message;
             if (msg is Hello r)
             {
-                Console.WriteLine($"Hello {r.Who}");
+                Console.WriteLine($"Hello {r.Who}, on {context.Self.Id}");
             }
             return Actor.Done;
         }

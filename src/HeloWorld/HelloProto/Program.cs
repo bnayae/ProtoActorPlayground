@@ -6,12 +6,27 @@ namespace HelloProto
 {
     class Program
     {
+        #region private static readonly Props PROPS_SUPERVISOR = new Props()
+
+        private static readonly Props PROPS_SUPERVISOR = new Props()
+             // the producer is a delegate that returns a new instance of an IActor
+             .WithProducer(() => new SupervisorActor())
+             // the default strategy restarts child actors a maximum of 10 times within a 10 second window
+             .WithChildSupervisorStrategy(
+                        new OneForOneStrategy((who, reason) =>
+                        {
+                            Console.WriteLine($"\r\nERROR: {reason.GetBaseException().Message}, on {who.Id}");
+                            return SupervisorDirective.Restart;
+                        }, 10, TimeSpan.FromSeconds(10)));
+
+        #endregion // private static readonly Props PROPS_SUPERVISOR = new Props()
+
         static void Main(string[] args)
         {
             //SimpleActor();
             //AnonymousActor();
-            HookedActor();
-
+            //HookedActor();
+            Supervisor();
             Console.ReadKey();
         }
 
@@ -21,11 +36,15 @@ namespace HelloProto
         {
             // The Props are used to configure and construct the Actor and it's Context.
             Props props = Actor.FromProducer(() => new HelloActor());
-            PID pid = Actor.Spawn(props);
-            pid.Tell(new Hello
-            {
-                Who = "Alex"
-            });
+            PID pid = Actor.Spawn(props); // create actor according to the properties definition
+            Console.WriteLine($"{pid.Id} has created");
+            PID pidPrefix = Actor.SpawnPrefix(props, "root_"); // create actor according to the properties definition
+            Console.WriteLine($"{pidPrefix.Id} has created");
+            PID pidNamed = Actor.SpawnNamed(props, "Singleton"); // create actor according to the properties definition
+            Console.WriteLine($"{pidNamed.Id} has created");
+            pid.Tell(new Hello { Who = "Alex" });
+            pidPrefix.Tell(new Hello { Who = "Ben" });
+            pidNamed.Tell(new Hello { Who = "Root" });
         }
 
         #endregion // SimpleActor
@@ -43,7 +62,7 @@ namespace HelloProto
                 }
                 return Actor.Done;
             });
-            PID anonymousActorPid = Actor.Spawn(anonymousActorProps);
+            PID anonymousActorPid = Actor.Spawn(anonymousActorProps); // create actor according to the properties definition
             anonymousActorPid.Tell("Hi");
         }
 
@@ -96,7 +115,7 @@ namespace HelloProto
                // the default spawner constructs the Actor, Context and Process
                .WithSpawner(Props.DefaultSpawner);
 
-            PID pid = Actor.Spawn(props);
+            PID pid = Actor.Spawn(props); // create actor according to the properties definition
             pid.Tell(new Hello
             {
                 Who = "Bnaya"
@@ -108,5 +127,23 @@ namespace HelloProto
         }
 
         #endregion // HookedActor
+
+        #region Supervisor
+
+        private static void Supervisor()
+        {
+            // The Props are used to configure and construct the Actor and it's Context.
+            Props props = PROPS_SUPERVISOR;// new Props().WithProducer(() => new SupervisorActor());
+
+            PID pid = Actor.Spawn(props); // create actor according to the properties definition
+            //pid.Tell("bnaya");
+            //pid.Tell("Bnaya Eshet");
+            for (int i = -12; i < 5; i++)
+            {
+                pid.Tell(i);
+            }
+        }
+
+        #endregion // Supervisor
     }
 }
