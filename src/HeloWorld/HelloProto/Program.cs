@@ -27,7 +27,8 @@ namespace HelloProto
             //AnonymousActor();
             //HookedActor();
             //Supervisor();
-            RequestResponse();
+            //RequestResponse();
+            StateMachine();
             Console.ReadKey();
         }
 
@@ -157,5 +158,27 @@ namespace HelloProto
         }
 
         #endregion // RequestResponse
+
+        #region StateMachine
+
+        private static void StateMachine()
+        {
+            Props props = Actor.FromProducer(() => new StateMachineActor());
+            PID pid = Actor.Spawn(props); // create actor according to the properties definition
+            var a = new StateA();
+            var b = new StateB();
+            var c = new StateC();
+            var suspend = new Suspend();
+            var resume = new Resume();
+            pid.Tell(b); // A -> B
+            pid.Tell(suspend);
+            pid.Tell(c); // should be ignored
+            pid.Tell(resume);
+            pid.Tell(c); // B -> C
+            pid.Tell(a); // C -> A
+            pid.Tell(a); // A ignore
+        }
+
+        #endregion // StateMachine
     }
 }
