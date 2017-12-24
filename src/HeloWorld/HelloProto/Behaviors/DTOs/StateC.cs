@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HelloProto
 {
-    class StateC
+    struct StateC
     {
         public string Message { get; set; }
     }

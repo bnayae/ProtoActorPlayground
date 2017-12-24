@@ -1,6 +1,9 @@
-﻿using Proto;
+﻿using FakeItEasy;
+using Proto;
 using Proto.Mailbox;
+using Proto.Router;
 using System;
+using System.Threading.Tasks;
 
 namespace HelloProto
 {
@@ -28,7 +31,8 @@ namespace HelloProto
             //HookedActor();
             //Supervisor();
             //RequestResponse();
-            StateMachine();
+            //StateMachine();
+            Routers();
             Console.ReadKey();
         }
 
@@ -83,7 +87,7 @@ namespace HelloProto
                // the default mailbox uses unbounded queues
                .WithMailbox(() => UnboundedMailbox.Create())
                // the default strategy restarts child actors a maximum of 10 times within a 10 second window
-               .WithChildSupervisorStrategy(new OneForOneStrategy((who, reason) => 
+               .WithChildSupervisorStrategy(new OneForOneStrategy((who, reason) =>
                         SupervisorDirective.Restart, 10, TimeSpan.FromSeconds(10)))
                // middlewares can be chained to intercept incoming and outgoing messages
                // receive middlewares are invoked before the actor receives the message
@@ -180,5 +184,66 @@ namespace HelloProto
         }
 
         #endregion // StateMachine
+
+        //#region VirtualActor
+
+        //// https://github.com/AsynkronIT/protoactor-dotnet/blob/29c8e061d4eee6a54849eb01f618dedc7533ff32/src/Proto.Actor.Extensions/ActorFactory.cs#L47
+        //// NuGet: Proto.Actor.Extensions
+        //private static void VirtualActor()
+        //{
+        //    IServiceProvider serviceLocator = A.Fake<IServiceProvider>();
+
+        //    IActorFactory factory = new ActorFactory()
+        //    Props props = Actor.FromProducer(() => new StateMachineActor());
+        //    PID pid = Actor.Spawn(props); // create actor according to the properties definition
+        //    var a = new StateA();
+        //    var b = new StateB();
+        //    var c = new StateC();
+        //    var suspend = new Suspend();
+        //    var resume = new Resume();
+        //    pid.Tell(b); // A -> B
+        //    pid.Tell(suspend);
+        //    pid.Tell(c); // should be ignored
+        //    pid.Tell(resume);
+        //    pid.Tell(c); // B -> C
+        //    pid.Tell(a); // C -> A
+        //    pid.Tell(a); // A ignore
+        //}
+
+        //#endregion // VirtualActor
+
+        #region Routers
+
+        // http://proto.actor/blog/2017/02/20/limit-concurrency.html
+        // NuGet: Proto.Router
+        private static void Routers()
+        {
+            Props props = Actor.FromFunc(RoutedWorkAsync);
+            Props router = Router.NewRoundRobinPool(props, 5);
+            PID pid = Actor.Spawn(router);
+            for (int i = 0; i < 100; i++)
+            {
+                pid.Tell($"Item {i}");
+            }
+        }
+
+        private static Task RoutedWorkAsync(IContext context)
+        {
+            var msg = context.Message;
+            if (msg is string r)
+            {
+                var id = context.Self.Id;
+                if (int.TryParse(id.Substring(4), out var indent))
+                {
+                    string prefix = new string('\t', indent - 1);
+                    Console.WriteLine($"{prefix}{r} [{id}]");
+                }
+                else
+                    Console.WriteLine("Bug");
+            }
+            return Actor.Done;
+        }
+
+        #endregion // Routers
     }
 }

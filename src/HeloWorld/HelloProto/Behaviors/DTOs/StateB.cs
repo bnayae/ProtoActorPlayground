@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HelloProto
 {
-    class StateB
+    struct StateB
     {
         public DateTime Time { get; set; }
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HelloProto
 {
-    class Suspend
+    struct Suspend
     {
     }
 }

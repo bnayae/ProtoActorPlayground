@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FakeItEasy" Version="4.3.0" />
     <PackageReference Include="Proto.Actor" Version="0.1.14" />
+    <PackageReference Include="Proto.Actor.Extensions" Version="0.1.14" />
+    <PackageReference Include="Proto.Router" Version="0.1.14" />
   </ItemGroup>
 
 </Project>
